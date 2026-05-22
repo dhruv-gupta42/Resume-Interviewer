@@ -83,14 +83,61 @@ catch(error){
 
 console.log(
 "GEMINI ERROR:",
-error
+error.message
 );
 
-res.status(500).json({
+const lowerResume =
+resumeText.toLowerCase();
 
-error:
-error.message ||
-"Question generation failed"
+let fallbackQuestions="";
+
+if(
+lowerResume.includes("warehouse") ||
+lowerResume.includes("logistics") ||
+lowerResume.includes("inventory")
+){
+
+fallbackQuestions=`
+
+1. How do you maintain speed and accuracy while picking orders?
+2. Tell me about handling high-volume workloads in a warehouse.
+3. How would you respond to a warehouse safety issue?
+4. Describe your experience with inventory management.
+5. How do you prioritize multiple urgent shipments?
+
+6. Tell me about yourself.
+7. Describe a challenge you faced at work.
+8. Why should we hire you?
+
+9. Explain your contribution to improving workflow.
+10. Tell us about a time you increased efficiency.
+
+`;
+
+}
+
+else{
+
+fallbackQuestions=`
+
+1. Tell me about yourself.
+2. What are your strengths?
+3. What are your weaknesses?
+4. Describe a challenge you solved.
+5. Why should we hire you?
+6. Explain a project you worked on.
+7. Tell me about teamwork experience.
+8. Describe a difficult situation.
+9. What are your goals?
+10. Why do you want this role?
+
+`;
+
+}
+
+res.json({
+
+questions:fallbackQuestions
 
 });
 
