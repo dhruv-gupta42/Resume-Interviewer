@@ -1,35 +1,59 @@
-const axios=require("axios");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-exports.generateQuestions=async(req,res)=>{
+const genAI = new GoogleGenerativeAI(
+process.env.GEMINI_API_KEY
+);
+
+exports.generateQuestions = async(req,res)=>{
 
 try{
 
-const {resumeText}=req.body;
+const { resumeText } = req.body;
 
 if(!resumeText){
 
 return res.status(400).json({
+
 message:"Resume text missing"
+
 });
 
 }
 
-const prompt=`
+const model =
+genAI.getGenerativeModel({
+
+model:"gemini-2.0-flash"
+
+});
+
+const prompt = `
 
 You are an intelligent interviewer.
 
-Analyze the candidate's resume and identify:
-- role
+Analyze this resume and identify:
+
+- job role
 - industry
 - skills
 - experience
 
-Generate questions specifically for THAT candidate.
+Generate interview questions specifically for THAT candidate.
 
-Generate:
-- 5 role-specific questions
-- 3 HR questions
-- 2 experience-based questions
+Rules:
+
+- Software Developer → coding/project questions
+- Warehouse → inventory, safety, logistics
+- Customer Service → communication/customer handling
+- Marketing → campaigns/analytics
+- Finance → finance-related questions
+- Any other profession → adapt naturally
+
+Generate exactly:
+
+5 role-specific questions
+3 HR questions
+2 experience-based questions
 
 Return only a numbered list.
 
@@ -39,62 +63,18 @@ ${resumeText}
 
 `;
 
-const response=await axios.post(
-
-"https://openrouter.ai/api/v1/chat/completions",
-
-{
-
-model:"qwen/qwen3.7-max",
-
-messages:[
-
-{
-role:"user",
-content:prompt
-}
-
-]
-
-},
-
-{
-
-headers:{
-
-Authorization:
-`Bearer ${process.env.OPENROUTER_API_KEY}`,
-
-"Content-Type":
-"application/json",
-
-"HTTP-Referer":
-"https://resumeinterviewer.netlify.app",
-
-"X-Title":
-"Resume Interviewer"
-
-}
-
-}
-
+const result =
+await model.generateContent(
+prompt
 );
 
-const questions=
-response.data
-?.choices?.[0]
-?.message?.content;
-
-if(!questions){
-
-throw new Error(
-"No questions returned"
-);
-
-}
+const response =
+result.response.text();
 
 res.json({
-questions
+
+questions:response
+
 });
 
 }
@@ -102,19 +82,13 @@ questions
 catch(error){
 
 console.log(
-"AI ERROR:",
-JSON.stringify(
-error.response?.data ||
-error.message,
-null,
-2
-)
+"GEMINI ERROR:",
+error
 );
 
 res.status(500).json({
 
 error:
-error.response?.data ||
 error.message ||
 "Question generation failed"
 
