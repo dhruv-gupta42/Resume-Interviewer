@@ -1,18 +1,15 @@
 const express=require("express");
-const multer=require("multer");
-
 const router=express.Router();
+const multer=require("multer");
 
 const {
 uploadResume
 }=require("../controllers/resumeController");
 
-const storage=multer.diskStorage({
+const storage=
+multer.diskStorage({
 
-destination:(req,file,cb)=>{
-
-cb(null,"uploads/");
-},
+destination:"uploads/",
 
 filename:(req,file,cb)=>{
 
@@ -25,7 +22,8 @@ Date.now()+"-"+file.originalname
 
 });
 
-const upload=multer({
+const upload=
+multer({
 storage
 });
 
