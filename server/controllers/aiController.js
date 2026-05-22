@@ -9,7 +9,9 @@ try{
 if(!resumeText){
 
 return res.status(400).json({
+
 message:"Resume text missing"
+
 });
 
 }
@@ -18,11 +20,12 @@ const prompt=`
 
 You are an intelligent interviewer.
 
-Analyze the resume and determine:
+Analyze the candidate resume and identify:
+
 - role
 - industry
 - skills
-- experience
+- work experience
 
 Generate:
 
@@ -30,7 +33,7 @@ Generate:
 3 HR questions
 2 experience-based questions
 
-Return ONLY a numbered list.
+Return only a numbered list.
 
 Resume:
 
@@ -40,17 +43,19 @@ ${resumeText}
 
 const response=await axios.post(
 
-"https://openrouter.ai/api/v1/chat/completions",
+"https://api.groq.com/openai/v1/chat/completions",
 
 {
 
-model:"openai/gpt-oss-20b",
+model:"llama-3.3-70b-versatile",
 
 messages:[
 
 {
+
 role:"user",
 content:prompt
+
 }
 
 ]
@@ -62,16 +67,10 @@ content:prompt
 headers:{
 
 Authorization:
-`Bearer ${process.env.OPENROUTER_API_KEY}`,
+`Bearer ${process.env.GROQ_API_KEY}`,
 
 "Content-Type":
-"application/json",
-
-"HTTP-Referer":
-"https://resumeinterviewer.netlify.app",
-
-"X-Title":
-"Resume Interviewer"
+"application/json"
 
 }
 
@@ -80,16 +79,16 @@ Authorization:
 );
 
 const questions=
-response.data?.choices?.[0]?.message?.content;
 
-if(!questions){
-
-throw new Error("No questions returned");
-
-}
+response.data
+?.choices?.[0]
+?.message
+?.content;
 
 return res.json({
+
 questions
+
 });
 
 }
@@ -97,32 +96,19 @@ questions
 catch(error){
 
 console.log(
-"OPENROUTER ERROR:",
-JSON.stringify(
-error.response?.data||
-error.message,
-null,
-2
-)
+
+"GROQ ERROR:",
+
+error.response?.data ||
+error.message
+
 );
 
-// fallback
-return res.status(200).json({
+return res.status(500).json({
 
-questions:`
-
-1. Tell me about yourself.
-2. Describe your previous work responsibilities.
-3. What challenges did you face in your previous role?
-4. Describe a problem you solved.
-5. How do you work under pressure?
-6. Why should we hire you?
-7. Describe teamwork experience.
-8. Tell me about a difficult situation.
-9. Explain a process improvement you made.
-10. What are your career goals?
-
-`
+error:
+error.response?.data ||
+error.message
 
 });
 
