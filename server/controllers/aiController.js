@@ -1,12 +1,8 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-const genAI = new GoogleGenerativeAI(
-process.env.GEMINI_API_KEY
-);
+const axios=require("axios");
 
 exports.generateQuestions=async(req,res)=>{
 
-const { resumeText } = req.body;
+const {resumeText}=req.body;
 
 try{
 
@@ -18,43 +14,82 @@ message:"Resume text missing"
 
 }
 
-const model=
-genAI.getGenerativeModel({
-
-model:"gemini-2.0-flash"
-
-});
-
 const prompt=`
 
 You are an intelligent interviewer.
 
-Analyze this resume and generate:
+Analyze the resume and determine:
+- role
+- industry
+- skills
+- experience
 
-- 5 role-specific questions
-- 3 HR questions
-- 2 experience-based questions
+Generate:
+
+5 role-specific questions
+3 HR questions
+2 experience-based questions
+
+Return ONLY a numbered list.
 
 Resume:
 
 ${resumeText}
 
-Return only a numbered list.
-
 `;
 
-const result=
-await model.generateContent(
-prompt
+const response=await axios.post(
+
+"https://openrouter.ai/api/v1/chat/completions",
+
+{
+
+model:"openai/gpt-oss-20b",
+
+messages:[
+
+{
+role:"user",
+content:prompt
+}
+
+]
+
+},
+
+{
+
+headers:{
+
+Authorization:
+`Bearer ${process.env.OPENROUTER_API_KEY}`,
+
+"Content-Type":
+"application/json",
+
+"HTTP-Referer":
+"https://resumeinterviewer.netlify.app",
+
+"X-Title":
+"Resume Interviewer"
+
+}
+
+}
+
 );
 
-const response=
-result.response.text();
+const questions=
+response.data?.choices?.[0]?.message?.content;
 
-res.json({
+if(!questions){
 
-questions:response
+throw new Error("No questions returned");
 
+}
+
+return res.json({
+questions
 });
 
 }
@@ -62,64 +97,32 @@ questions:response
 catch(error){
 
 console.log(
-"GEMINI ERROR:",
-error.message
+"OPENROUTER ERROR:",
+JSON.stringify(
+error.response?.data||
+error.message,
+null,
+2
+)
 );
 
-const lowerResume=
-resumeText.toLowerCase();
-
-let fallbackQuestions="";
-
-if(
-
-lowerResume.includes("warehouse") ||
-lowerResume.includes("inventory") ||
-lowerResume.includes("logistics")
-
-){
-
-fallbackQuestions=`
-
-1. How do you maintain accuracy while packing and picking orders?
-2. Tell me about handling high-volume workloads.
-3. How would you handle a warehouse safety issue?
-4. Describe your experience with inventory management.
-5. How do you prioritize urgent shipments?
-
-6. Tell me about yourself.
-7. Why should we hire you?
-8. Describe a challenge you faced.
-
-9. Explain your contribution to workflow improvements.
-10. Tell us about reducing waste or improving efficiency.
-
-`;
-
-}
-
-else{
-
-fallbackQuestions=`
-
-1. Tell me about yourself.
-2. What are your strengths?
-3. What are your weaknesses?
-4. Describe a challenge you solved.
-5. Why should we hire you?
-6. Explain a project you worked on.
-7. Tell me about teamwork experience.
-8. Describe a difficult situation.
-9. What are your goals?
-10. Why do you want this role?
-
-`;
-
-}
-
+// fallback
 return res.status(200).json({
 
-questions:fallbackQuestions
+questions:`
+
+1. Tell me about yourself.
+2. Describe your previous work responsibilities.
+3. What challenges did you face in your previous role?
+4. Describe a problem you solved.
+5. How do you work under pressure?
+6. Why should we hire you?
+7. Describe teamwork experience.
+8. Tell me about a difficult situation.
+9. Explain a process improvement you made.
+10. What are your career goals?
+
+`
 
 });
 
