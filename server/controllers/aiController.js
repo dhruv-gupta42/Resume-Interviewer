@@ -9,49 +9,28 @@ const {resumeText}=req.body;
 if(!resumeText){
 
 return res.status(400).json({
-
 message:"Resume text missing"
-
 });
 
 }
 
 const prompt=`
 
-You are an intelligent AI interviewer.
+You are an AI interviewer.
 
-Analyze this resume carefully and identify:
+Analyze the resume and generate interview questions based ONLY on the candidate's experience and role.
 
-- Current/Past job roles
-- Industry
-- Skills
-- Experience
-- Responsibilities
-
-Generate interview questions specifically for THIS candidate.
-
-Rules:
-
-- Software Developer → coding, projects, technologies
-- Warehouse/Logistics → inventory, operations, safety, teamwork, problem-solving
-- Customer Service → communication, customer handling
-- Marketing → campaigns, analytics, strategy
-- Finance → financial processes and analysis
-- Any other profession → adapt naturally
-
-Generate exactly:
+Generate:
 
 5 role-specific questions
-
-3 HR/behavioral questions
-
+3 HR questions
 2 experience-based questions
-
-Return ONLY a numbered list.
 
 Resume:
 
 ${resumeText}
+
+Return only a numbered list.
 
 `;
 
@@ -63,15 +42,13 @@ await axios.post(
 
 {
 
-model:"openai/gpt-oss-20b:free",
+model:"mistralai/mistral-7b-instruct:free",
 
 messages:[
 
 {
-
 role:"user",
 content:prompt
-
 }
 
 ]
@@ -100,17 +77,23 @@ Authorization:
 
 );
 
-const generatedQuestions=
+const questions=
 
 response.data
-.choices[0]
-.message
-.content;
+?.choices?.[0]
+?.message
+?.content;
+
+if(!questions){
+
+throw new Error(
+"No questions returned"
+);
+
+}
 
 res.json({
-
-questions:generatedQuestions
-
+questions
 });
 
 }
@@ -126,10 +109,12 @@ error.message
 
 );
 
-return res.status(500).json({
+res.status(500).json({
 
 error:
-"Question generation failed"
+error.response?.data ||
+error.message ||
+"AI generation failed"
 
 });
 
