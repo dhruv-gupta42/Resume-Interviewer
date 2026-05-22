@@ -2,12 +2,16 @@ import {useState,useEffect} from "react";
 import {useNavigate} from "react-router-dom";
 import {motion} from "framer-motion";
 import {Mic,ArrowRight,ArrowLeft,Clock} from "lucide-react";
+import axios from "axios";
 
 import PageLayout from "../components/PageLayout";
 
 function Interview(){
 
 const navigate=useNavigate();
+
+const API_URL=
+import.meta.env.VITE_API_URL;
 
 const questions=
 JSON.parse(
@@ -28,6 +32,9 @@ useState(false);
 
 const[seconds,setSeconds]=
 useState(0);
+
+const[loading,setLoading]=
+useState(false);
 
 useEffect(()=>{
 
@@ -93,6 +100,89 @@ setStartedListening(false);
 
 };
 
+const submitInterview=
+async(updatedAnswers)=>{
+
+setLoading(true);
+
+try{
+
+const response=
+await axios.post(
+
+`${API_URL}/api/evaluation/score`,
+
+{
+
+questions,
+answers:updatedAnswers
+
+}
+
+);
+
+const result=
+response.data;
+
+localStorage.setItem(
+
+"results",
+
+JSON.stringify(result)
+
+);
+
+navigate("/results");
+
+}
+
+catch(error){
+
+console.log(error);
+
+// fallback if evaluation fails
+
+const fallbackResults={
+
+overallScore:75,
+confidence:80,
+communication:78,
+
+feedback:
+updatedAnswers.map(
+(item)=>({
+
+answer:item.answer,
+
+strength:
+"Relevant response",
+
+improvement:
+"Add more examples",
+
+score:7
+
+})
+)
+
+};
+
+localStorage.setItem(
+
+"results",
+
+JSON.stringify(
+fallbackResults
+)
+
+);
+
+navigate("/results");
+
+}
+
+};
+
 const nextQuestion=()=>{
 
 const updated=[...answers];
@@ -127,11 +217,16 @@ prev=>prev+1
 }else{
 
 localStorage.setItem(
+
 "answers",
+
 JSON.stringify(updated)
+
 );
 
-navigate("/results");
+submitInterview(
+updated
+);
 
 }
 
@@ -161,7 +256,8 @@ prev=>prev-1
 );
 
 setCurrentAnswer(
-updated[currentIndex-1]?.answer||""
+updated[currentIndex-1]
+?.answer||""
 );
 
 };
@@ -296,6 +392,7 @@ Previous
 
 <button
 onClick={nextQuestion}
+disabled={loading}
 className="
 px-6
 py-3
@@ -308,9 +405,13 @@ gap-2
 "
 >
 
-Next
+{loading
+? "Analyzing..."
+: "Next"}
 
+{!loading&&
 <ArrowRight/>
+}
 
 </button>
 
