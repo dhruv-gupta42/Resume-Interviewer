@@ -1,200 +1,81 @@
-import {useEffect,useState} from "react";
-import {motion} from "framer-motion";
-import PageLayout from "../components/PageLayout";
-import api from "../services/api";
-import jsPDF from "jspdf";
+import { useNavigate } from "react-router-dom";
 
-function Results(){
+export default function Results(){
 
-const [report,setReport]=useState(null);
-const [loading,setLoading]=useState(true);
+const navigate=useNavigate();
 
-useEffect(()=>{
-
-const answers=
-JSON.parse(
-localStorage.getItem("answers")
-);
-const downloadReport=()=>{
-
-const pdf=new jsPDF();
-
-pdf.text(
-"AI Interview Report",
-20,
-20
+const results=JSON.parse(
+localStorage.getItem("results")
 );
 
-pdf.text(
-report.summary,
-20,
-40
-);
-
-pdf.save(
-"report.pdf"
-);
-
-};
-
-async function scoreInterview(){
-
-try{
-
-const user=
-JSON.parse(
-localStorage.getItem(
-"user"
-)
-);
-
-const response=
-await api.post(
-"/evaluation/score",
-{
-answers,
-userId:user.id
-}
-);
-
-setReport(
-response.data
-);
-
-}
-catch(error){
-
-console.log(error);
-
-}
-finally{
-
-setLoading(false);
-
-}
-
-}
-
-scoreInterview();
-
-},[]);
-
-if(loading){
+if(!results){
 
 return(
 
-<PageLayout>
+<div className="min-h-screen bg-[#020617] flex flex-col justify-center items-center text-white">
 
-<div className="
-flex
-flex-col
-items-center
-justify-center
-h-[70vh]
-">
+<h1 className="text-5xl font-bold mb-4">
+No Results Found
+</h1>
 
-<div className="
-w-16
-h-16
-border-4
-border-white/10
-border-t-white
-rounded-full
-animate-spin
-mb-6
-"/>
+<p className="text-gray-400 mb-8">
+Complete an interview to view your report.
+</p>
 
-<h2 className="text-2xl">
+<button
+onClick={()=>navigate("/dashboard")}
+className="bg-white text-black px-6 py-3 rounded-full"
+>
 
-AI analyzing your interview...
+Back To Dashboard
+
+</button>
+
+</div>
+
+);
+
+}
+
+return(
+
+<div className="min-h-screen bg-[#020617] text-white p-10">
+
+<h1 className="text-6xl font-bold mb-10">
+Interview Report
+</h1>
+
+<div className="grid md:grid-cols-3 gap-6">
+
+<div className="bg-[#0f172a] p-8 rounded-3xl">
+<p className="text-gray-400">
+Overall Score
+</p>
+
+<h2 className="text-5xl font-bold">
+
+{results.overallScore}/100
 
 </h2>
 
 </div>
 
-</PageLayout>
-
-)
-
-}
-
-return(
-
-<PageLayout>
-
-<div className="max-w-7xl mx-auto">
-
-<h1 className="
-text-6xl
-font-bold
-mb-10
-">
-
-Interview Report
-
-</h1>
-
-
-<div className="
-grid
-grid-cols-3
-gap-6
-mb-12
-">
-
-<div className="
-p-8
-rounded-3xl
-bg-white/5
-border
-border-white/10
-">
-
-<p className="text-gray-400">
-
-Overall Score
-
-</p>
-
-<h1 className="text-5xl">
-
-{report.overallScore}/100
-
-</h1>
-
-</div>
-
-
-<div className="
-p-8
-rounded-3xl
-bg-white/5
-border
-border-white/10
-">
-
+<div className="bg-[#0f172a] p-8 rounded-3xl">
 <p className="text-gray-400">
 
 Confidence
 
 </p>
 
-<h1 className="text-5xl">
+<h2 className="text-5xl font-bold">
 
-{report.confidence}%
+{results.confidence}%
 
-</h1>
+</h2>
 
 </div>
 
-
-<div className="
-p-8
-rounded-3xl
-bg-white/5
-border
-border-white/10
-">
+<div className="bg-[#0f172a] p-8 rounded-3xl">
 
 <p className="text-gray-400">
 
@@ -202,230 +83,75 @@ Communication
 
 </p>
 
-<h1 className="text-5xl">
+<h2 className="text-5xl font-bold">
 
-{report.communication}%
-
-</h1>
-
-</div>
-
-</div>
-
-
-<h2 className="
-text-3xl
-font-bold
-mb-8
-">
-
-Question Analysis
+{results.communication}%
 
 </h2>
 
-<div className="space-y-6">
+</div>
 
-{
+</div>
 
-report.answers.map(
-(item,index)=>(
+<div className="bg-[#0f172a] mt-10 rounded-3xl p-8">
 
-<motion.div
+<h2 className="text-3xl font-bold mb-6">
+Detailed Feedback
+</h2>
 
+{results.feedback?.map((item,index)=>(
+
+<div
 key={index}
-
-initial={{
-opacity:0,
-y:30
-}}
-
-animate={{
-opacity:1,
-y:0
-}}
-
-className="
-p-8
-rounded-3xl
-bg-white/5
-border
-border-white/10
-"
-
+className="mb-6 border-b border-gray-700 pb-6"
 >
 
-<div className="
-flex
-justify-between
-items-start
-mb-5
-">
+<h3 className="font-bold mb-2">
 
-<h3 className="
-text-xl
-w-[80%]
-">
-
-{item.question}
+Question {index+1}
 
 </h3>
 
-<div className="
-px-4
-py-2
-rounded-full
-bg-white
-text-black
-font-bold
-">
+<p>
 
-{item.score}/10
+<strong>Your Response:</strong>
 
-</div>
-
-</div>
-
-<div className="mb-6">
-
-<p className="
-text-blue-400
-font-semibold
-mb-3
-">
-
-Your Answer
+{item.answer}
 
 </p>
 
-<div className="
-p-5
-rounded-2xl
-bg-black/20
-border
-border-white/5
-">
+<p>
 
-<p className="
-text-gray-300
-leading-7
-">
-
-{
-JSON.parse(
-localStorage.getItem("answers")
-)?.[index]?.answer
-||
-
-"No answer provided"
-}
-
-</p>
-
-</div>
-
-</div>
-
-<div className="mb-4">
-
-<p className="
-text-green-400
-font-semibold
-mb-2
-">
-
-Strength
-
-</p>
-
-<p className="text-gray-300">
+<strong>Strength:</strong>
 
 {item.strength}
 
 </p>
 
-</div>
+<p>
 
-<div>
-
-<p className="
-text-yellow-400
-font-semibold
-mb-2
-">
-
-Improvement
-
-</p>
-
-<p className="text-gray-300">
+<strong>Improve:</strong>
 
 {item.improvement}
 
 </p>
 
-</div>
+<p>
 
-</motion.div>
+<strong>Score:</strong>
 
-)
-
-)
-
-}
-
-</div>
-
-
-<div className="
-mt-10
-p-8
-rounded-3xl
-bg-white/5
-border
-border-white/10
-">
-
-<h2 className="
-text-3xl
-mb-5
-">
-
-Summary
-
-</h2>
-
-<p className="text-gray-300">
-
-{report.summary}
+{item.score}/10
 
 </p>
-<button
 
-onClick={downloadReport}
+</div>
 
-className="
-mt-8
-px-8
-py-4
-rounded-full
-bg-white
-text-black
-"
-
->
-
-Download Report
-
-</button>
+))}
 
 </div>
 
 </div>
 
-</PageLayout>
-
-)
+);
 
 }
-
-export default Results;
