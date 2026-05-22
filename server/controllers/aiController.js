@@ -16,33 +16,36 @@ message:"Resume text missing"
 
 const prompt=`
 
-You are an AI interviewer.
+You are an intelligent interviewer.
 
-Analyze the resume and generate interview questions based ONLY on the candidate's experience and role.
+Analyze the candidate's resume and identify:
+- role
+- industry
+- skills
+- experience
+
+Generate questions specifically for THAT candidate.
 
 Generate:
+- 5 role-specific questions
+- 3 HR questions
+- 2 experience-based questions
 
-5 role-specific questions
-3 HR questions
-2 experience-based questions
+Return only a numbered list.
 
 Resume:
 
 ${resumeText}
 
-Return only a numbered list.
-
 `;
 
-const response=
-
-await axios.post(
+const response=await axios.post(
 
 "https://openrouter.ai/api/v1/chat/completions",
 
 {
 
-model:"mistralai/mistral-7b-instruct:free",
+model:"google/gemma-3-4b-it:free",
 
 messages:[
 
@@ -78,11 +81,9 @@ Authorization:
 );
 
 const questions=
-
 response.data
 ?.choices?.[0]
-?.message
-?.content;
+?.message?.content;
 
 if(!questions){
 
@@ -101,12 +102,13 @@ questions
 catch(error){
 
 console.log(
-
 "AI ERROR:",
-
+JSON.stringify(
 error.response?.data ||
-error.message
-
+error.message,
+null,
+2
+)
 );
 
 res.status(500).json({
@@ -114,7 +116,7 @@ res.status(500).json({
 error:
 error.response?.data ||
 error.message ||
-"AI generation failed"
+"Question generation failed"
 
 });
 
