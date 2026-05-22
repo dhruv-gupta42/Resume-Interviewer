@@ -45,7 +45,7 @@ const response=await axios.post(
 
 {
 
-model:"anthropic/claude-3-haiku",
+model:"qwen/qwen3.7-max",
 
 messages:[
 
