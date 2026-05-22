@@ -4,71 +4,51 @@ const genAI = new GoogleGenerativeAI(
 process.env.GEMINI_API_KEY
 );
 
-exports.generateQuestions = async(req,res)=>{
-
-try{
+exports.generateQuestions=async(req,res)=>{
 
 const { resumeText } = req.body;
+
+try{
 
 if(!resumeText){
 
 return res.status(400).json({
-
 message:"Resume text missing"
-
 });
 
 }
 
-const model =
+const model=
 genAI.getGenerativeModel({
 
 model:"gemini-2.0-flash"
 
 });
 
-const prompt = `
+const prompt=`
 
 You are an intelligent interviewer.
 
-Analyze this resume and identify:
+Analyze this resume and generate:
 
-- job role
-- industry
-- skills
-- experience
-
-Generate interview questions specifically for THAT candidate.
-
-Rules:
-
-- Software Developer → coding/project questions
-- Warehouse → inventory, safety, logistics
-- Customer Service → communication/customer handling
-- Marketing → campaigns/analytics
-- Finance → finance-related questions
-- Any other profession → adapt naturally
-
-Generate exactly:
-
-5 role-specific questions
-3 HR questions
-2 experience-based questions
-
-Return only a numbered list.
+- 5 role-specific questions
+- 3 HR questions
+- 2 experience-based questions
 
 Resume:
 
 ${resumeText}
 
+Return only a numbered list.
+
 `;
 
-const result =
+const result=
 await model.generateContent(
 prompt
 );
 
-const response =
+const response=
 result.response.text();
 
 res.json({
@@ -86,31 +66,33 @@ console.log(
 error.message
 );
 
-const lowerResume =
+const lowerResume=
 resumeText.toLowerCase();
 
 let fallbackQuestions="";
 
 if(
+
 lowerResume.includes("warehouse") ||
-lowerResume.includes("logistics") ||
-lowerResume.includes("inventory")
+lowerResume.includes("inventory") ||
+lowerResume.includes("logistics")
+
 ){
 
 fallbackQuestions=`
 
-1. How do you maintain speed and accuracy while picking orders?
-2. Tell me about handling high-volume workloads in a warehouse.
-3. How would you respond to a warehouse safety issue?
+1. How do you maintain accuracy while packing and picking orders?
+2. Tell me about handling high-volume workloads.
+3. How would you handle a warehouse safety issue?
 4. Describe your experience with inventory management.
-5. How do you prioritize multiple urgent shipments?
+5. How do you prioritize urgent shipments?
 
 6. Tell me about yourself.
-7. Describe a challenge you faced at work.
-8. Why should we hire you?
+7. Why should we hire you?
+8. Describe a challenge you faced.
 
-9. Explain your contribution to improving workflow.
-10. Tell us about a time you increased efficiency.
+9. Explain your contribution to workflow improvements.
+10. Tell us about reducing waste or improving efficiency.
 
 `;
 
@@ -135,7 +117,7 @@ fallbackQuestions=`
 
 }
 
-res.json({
+return res.status(200).json({
 
 questions:fallbackQuestions
 
