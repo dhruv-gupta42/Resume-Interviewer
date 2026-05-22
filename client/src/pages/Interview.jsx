@@ -140,32 +140,107 @@ catch(error){
 
 console.log(error);
 
-// fallback if evaluation fails
+const feedback=
+updatedAnswers.map((item)=>{
+
+const length=
+item.answer?.trim().length||0;
+
+let score=0;
+let strength="";
+let improvement="";
+
+if(length<20){
+
+score=3;
+
+strength=
+"Attempted response";
+
+improvement=
+"Add more detail and explain your thinking.";
+
+}
+
+else if(length<80){
+
+score=6;
+
+strength=
+"Answer addresses the question";
+
+improvement=
+"Provide examples and elaborate further.";
+
+}
+
+else{
+
+score=9;
+
+strength=
+"Detailed and structured response";
+
+improvement=
+"Could be improved with measurable outcomes or real experiences.";
+
+}
+
+return{
+
+question:item.question,
+answer:item.answer,
+score,
+strength,
+improvement
+
+};
+
+});
+
+const avg=
+Math.round(
+
+feedback.reduce(
+(sum,item)=>
+sum+item.score,
+0
+)/feedback.length
+
+);
 
 const fallbackResults={
 
-overallScore:75,
-confidence:80,
-communication:78,
+overallScore:
+avg*10,
 
-feedback:
-updatedAnswers.map(
-(item)=>({
+confidence:
+Math.min(
+avg*10+5,
+100
+),
 
-answer:item.answer,
+communication:
+Math.min(
+avg*10,
+100
+),
 
-strength:
-"Relevant response",
-
-improvement:
-"Add more examples",
-
-score:7
-
-})
-)
+feedback
 
 };
+
+localStorage.setItem(
+
+"results",
+
+JSON.stringify(
+fallbackResults
+)
+
+);
+
+navigate("/results");
 
 localStorage.setItem(
 
