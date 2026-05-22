@@ -1,3 +1,4 @@
+import {useEffect,useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 import {
@@ -19,30 +20,108 @@ History
 }
 from "lucide-react";
 
+import api from "../services/api";
 import PageLayout from "../components/PageLayout";
 
 function Dashboard(){
 
 const navigate=useNavigate();
 
+const [history,setHistory]=useState([]);
+
+const user=
+JSON.parse(
+localStorage.getItem("user")
+);
+
 const questions=
 JSON.parse(
-localStorage.getItem(
-"questions"
-)
+localStorage.getItem("questions")
 );
 
 const interviewReady=
 questions &&
 questions.length>0;
 
-const data=[
+useEffect(()=>{
 
-{name:"1",score:72},
-{name:"2",score:85},
-{name:"3",score:77},
-{name:"4",score:92}
+async function loadHistory(){
 
+try{
+
+const response=
+await api.get(
+`/interviews/history/${user.id}`
+);
+
+setHistory(
+response.data
+);
+
+}
+catch(error){
+
+console.log(error);
+
+}
+
+}
+
+if(user){
+
+loadHistory();
+
+}
+
+},[]);
+
+const totalInterviews=
+history.length;
+
+const avgScore=
+history.length
+?
+Math.round(
+
+history.reduce(
+(sum,item)=>
+sum+item.overallScore,
+0
+)/history.length
+)
+:
+0;
+
+const bestScore=
+history.length
+?
+Math.max(
+...history.map(
+item=>item.overallScore
+)
+)
+:
+0;
+
+const chartData=
+
+history.length
+
+?
+
+history.map(
+(item,index)=>({
+
+name:`#${index+1}`,
+score:item.overallScore
+
+})
+)
+
+:
+
+[
+{name:"0",score:0}
 ];
 
 return(
@@ -51,36 +130,15 @@ return(
 
 <div className="max-w-7xl mx-auto">
 
-<h1 className="
-text-6xl
-font-bold
-mb-10
-">
-
+<h1 className="text-6xl font-bold mb-10">
 Dashboard
-
 </h1>
 
-
-<div className="
-grid
-grid-cols-3
-gap-6
-mb-12
-">
-
-{/* Upload Resume */}
+<div className="grid grid-cols-3 gap-6 mb-10">
 
 <motion.div
-
-whileHover={{
-scale:1.03
-}}
-
-onClick={()=>
-navigate("/upload")
-}
-
+whileHover={{scale:1.03}}
+onClick={()=>navigate("/upload")}
 className="
 cursor-pointer
 p-8
@@ -93,24 +151,16 @@ items-center
 justify-center
 gap-3
 "
-
 >
 
 <Upload size={40}/>
 
-<h2 className="
-text-xl
-font-semibold
-">
-
+<h2 className="text-xl font-semibold">
 Upload Resume
-
 </h2>
 
 </motion.div>
 
-
-{/* Start Interview */}
 
 <motion.div
 
@@ -135,7 +185,6 @@ navigate(
 }}
 
 className={`
-
 p-8
 rounded-3xl
 flex
@@ -153,37 +202,25 @@ interviewReady
 
 :
 
-"bg-white/5 opacity-40 cursor-not-allowed"
+"bg-white/5 opacity-40"
 
 }
 
 `}
-
 >
 
 <Mic size={40}/>
 
-<h2 className="
-text-xl
-font-semibold
-">
-
+<h2 className="text-xl font-semibold">
 Start Interview
-
 </h2>
 
 {
 
 !interviewReady &&
 
-<p className="
-text-sm
-text-gray-400
-text-center
-">
-
+<p className="text-gray-400 text-sm">
 Upload a resume first
-
 </p>
 
 }
@@ -191,18 +228,9 @@ Upload a resume first
 </motion.div>
 
 
-{/* History */}
-
 <motion.div
-
-whileHover={{
-scale:1.03
-}}
-
-onClick={()=>
-navigate("/history")
-}
-
+whileHover={{scale:1.03}}
+onClick={()=>navigate("/history")}
 className="
 cursor-pointer
 p-8
@@ -216,18 +244,12 @@ items-center
 justify-center
 gap-3
 "
-
 >
 
 <History size={40}/>
 
-<h2 className="
-text-xl
-font-semibold
-">
-
+<h2 className="text-xl font-semibold">
 Interview History
-
 </h2>
 
 </motion.div>
@@ -235,88 +257,42 @@ Interview History
 </div>
 
 
-{/* Analytics */}
+<div className="grid grid-cols-3 gap-6 mb-8">
 
-<div className="
-grid
-grid-cols-3
-gap-6
-mb-8
-">
+<div className="p-6 rounded-3xl bg-white/5">
 
-<div className="
-p-6
-rounded-3xl
-bg-white/5
-">
-
-<p className="
-text-gray-400
-">
-
+<p className="text-gray-400">
 Interviews
-
 </p>
 
-<h1 className="
-text-4xl
-mt-3
-">
-
-12
-
+<h1 className="text-4xl mt-3">
+{totalInterviews}
 </h1>
 
 </div>
 
 
-<div className="
-p-6
-rounded-3xl
-bg-white/5
-">
+<div className="p-6 rounded-3xl bg-white/5">
 
-<p className="
-text-gray-400
-">
-
+<p className="text-gray-400">
 Average Score
-
 </p>
 
-<h1 className="
-text-4xl
-mt-3
-">
-
-78
-
+<h1 className="text-4xl mt-3">
+{avgScore}
 </h1>
 
 </div>
 
 
-<div className="
-p-6
-rounded-3xl
-bg-white/5
-">
+<div className="p-6 rounded-3xl bg-white/5">
 
-<p className="
-text-gray-400
-">
-
+<p className="text-gray-400">
 Best Score
-
 </p>
 
-<h1 className="
-text-4xl
-mt-3
-">
-
-92
-
+<h1 className="text-4xl mt-3">
+{bestScore}
 </h1>
 
 </div>
@@ -332,18 +308,21 @@ h-[300px]
 ">
 
 <h2 className="
-mb-5
 text-xl
 font-semibold
+mb-5
 ">
 
 Performance Trend
 
 </h2>
 
-<ResponsiveContainer>
+<ResponsiveContainer
+width="100%"
+height="100%"
+>
 
-<LineChart data={data}>
+<LineChart data={chartData}>
 
 <XAxis dataKey="name"/>
 
@@ -366,7 +345,7 @@ dataKey="score"
 
 </PageLayout>
 
-)
+);
 
 }
 
