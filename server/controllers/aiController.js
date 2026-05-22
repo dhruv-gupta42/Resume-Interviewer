@@ -45,7 +45,7 @@ const response=await axios.post(
 
 {
 
-model:"openai/gpt-4.1-mini",
+model:"anthropic/claude-3-haiku",
 
 messages:[
 
