@@ -83,12 +83,20 @@ uploadResponse.data.text
 
 /* Save new questions */
 
+const formattedQuestions=
+
+aiResponse.data.questions
+.split("\n")
+.filter(
+q=>q.trim()!==""
+);
+
 localStorage.setItem(
 
 "questions",
 
 JSON.stringify(
-aiResponse.data.questions
+formattedQuestions
 )
 
 );
