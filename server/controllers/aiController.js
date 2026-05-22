@@ -45,7 +45,7 @@ const response=await axios.post(
 
 {
 
-model:"google/gemma-3-4b-it:free",
+model:"deepseek/deepseek-r1-0528:free",
 
 messages:[
 
