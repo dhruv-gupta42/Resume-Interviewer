@@ -15,16 +15,30 @@ message:"Resume text missing"
 }
 
 const prompt = `
-You are a technical interviewer.
+You are an intelligent interviewer.
 
-Based on the following resume:
+Analyze the candidate's resume and identify:
+- their job role
+- industry
+- skills
+- work experience
 
-${resumeText}
+Generate interview questions specifically based on THEIR background.
+
+Rules:
+- If they are a software developer → ask technical coding/project questions.
+- If they worked in warehouses/logistics → ask warehouse operations, inventory, teamwork, safety and problem-solving questions.
+- If they worked in marketing → ask marketing questions.
+- If they worked in customer service → ask customer service questions.
 
 Generate:
-- 5 technical interview questions
-- 3 HR questions
-- 2 project-based questions
+- 5 role-specific questions
+- 3 behavioral/HR questions
+- 2 experience-based questions
+
+Resume:
+
+${resumeText}
 
 Return only a numbered list.
 `;
