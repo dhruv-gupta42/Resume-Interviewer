@@ -45,7 +45,7 @@ const response=await axios.post(
 
 {
 
-model:"deepseek/deepseek-r1-0528:free",
+model:"openai/gpt-4.1-mini",
 
 messages:[
 
